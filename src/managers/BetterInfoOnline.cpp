@@ -126,3 +126,76 @@ void BetterInfoOnline::sendScoreToProfilePage(cocos2d::CCArray* scores, int acco
 void BetterInfoOnline::cancelScoresRequest(BILeaderboardDelegate* delegate){
     m_delegates.erase(delegate);
 }
+
+arc::Future<CCArray*> BetterInfoOnline::loadGlobalScores(LeaderboardType type, LeaderboardStat stat, bool force) {
+    const char* typeStr = nullptr;
+    if (type == LeaderboardType::Creator) {
+        typeStr = "creators";
+    } else if (type == LeaderboardType::Top100) {
+        switch(stat) {
+            case LeaderboardStat::Stars:
+                typeStr = "stars";
+                break;
+            case LeaderboardStat::Moons:
+                typeStr = "moons";
+                break;
+            case LeaderboardStat::Demons:
+                typeStr = "demons";
+                break;
+            case LeaderboardStat::UserCoins:
+                typeStr = "usercoins";
+                break;
+            default:
+                co_return nullptr;
+                break;
+        }
+    } else {
+        co_return nullptr;
+    }
+
+    auto existing = co_await waitForMainThread([this, type = std::make_pair(type, stat)] -> CCArray* {
+        if(m_globalScoreDict.contains(type)) {
+            return m_globalScoreDict[type];
+        }
+        return nullptr;
+    });
+
+    auto res = co_await ServerUtils::getBaseRequest(false)
+        .get(fmt::format("https://www.geometrydash.com/data/top-{}.json", typeStr));
+
+    if(!res.ok() || res.json().isErr()) co_return nullptr;
+
+    CCArray* scores = nullptr;
+    co_await waitForMainThread([this, type = std::make_pair(type, stat), res = std::move(res.json().unwrap()), &scores] mutable {
+        scores = CCArray::create();
+        m_globalScoreDict[type] = scores;
+
+        for(const auto& entry : res) {
+            auto score = GJUserScore::create();
+            score->m_accountID = entry["accountID"].asInt().unwrapOr(0);
+            score->m_userID = entry["userID"].asInt().unwrapOr(0);
+            score->m_userName = entry["userName"].asString().unwrapOr("");
+            score->m_stars = entry["stars"].asInt().unwrapOr(0);
+            score->m_moons = entry["moons"].asInt().unwrapOr(0);
+            score->m_diamonds = entry["diamonds"].asInt().unwrapOr(0);
+            score->m_demons = entry["demons"].asInt().unwrapOr(0);
+            score->m_secretCoins = entry["coins"].asInt().unwrapOr(0);
+            score->m_userCoins = entry["userCoins"].asInt().unwrapOr(0);
+            score->m_creatorPoints = entry["creatorScore"].asInt().unwrapOr(0);
+            score->m_playerRank = entry["globalRank"].asInt().unwrapOr(0);
+            score->m_iconID = entry["icon"].asInt().unwrapOr(0);
+            score->m_iconType = static_cast<IconType>(entry["iconType"].asInt().unwrapOr(0));
+            score->m_special = entry["special"].asInt().unwrapOr(0);
+            score->m_color1 = entry["color1"].asInt().unwrapOr(0);
+            score->m_color2 = entry["color2"].asInt().unwrapOr(0);
+            score->m_color3 = entry["color3"].asInt().unwrapOr(0);
+
+            scores->addObject(score);
+        }
+
+        BetterInfoCache::sharedState()->cacheUserScores(scores);
+        return scores;
+    });
+
+    co_return scores;
+}

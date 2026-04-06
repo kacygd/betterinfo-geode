@@ -238,6 +238,9 @@ $on_mod(DataSaved) {
  */
 arc::Future<> BetterInfoCache::cacheFollowedCreators() {
     log::debug("Started caching followed creators");
+
+    co_await BetterInfoOnline::sharedState()->loadGlobalScores(LeaderboardType::Creator, LeaderboardStat::Stars, false);
+
     std::vector<int> followedCreatorIDs;
     co_await waitForMainThread([this, &followedCreatorIDs] {
         auto followedCreators = GameLevelManager::sharedState()->m_followedCreators->asExt();

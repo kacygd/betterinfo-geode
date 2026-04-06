@@ -13,6 +13,7 @@ class BI_DLL BetterInfoOnline : public cocos2d::CCObject {
 
 public:
 	std::map<std::pair<int, int>, Ref<cocos2d::CCArray>> m_scoreDict;
+	std::map<std::pair<LeaderboardType, LeaderboardStat>, Ref<cocos2d::CCArray>> m_globalScoreDict;
 	std::set<BILeaderboardDelegate*> m_delegates;
 
 	bool init();
@@ -31,4 +32,6 @@ public:
     void sendScores(cocos2d::CCArray* scores, int accountID, int stat, BILeaderboardDelegate* delegate, Ref<ProfilePage> profilePage);
     void sendScoreToProfilePage(cocos2d::CCArray* scores, int accountID, Ref<ProfilePage> profilePage);
 	void cancelScoresRequest(BILeaderboardDelegate* delegate);
+
+	arc::Future<CCArray*> loadGlobalScores(LeaderboardType type, LeaderboardStat stat, bool force);
 };
