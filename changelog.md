@@ -1,4 +1,8 @@
 # Changelog
+## <cg>v4.4.6</c> (2026-06-23)
+* <cg>Added</c> <cl>Exact Uploaded Dates</c> to <co>levels</c>
+* <cg>Improved</c> <cl>caching</c> of <co>followed users</c>
+
 ## <cg>v4.4.5</c> (2026-03-25)
 * <cg>Fixed</c> a conflict breaking some features (Icon Hack) in several mod menus
 
