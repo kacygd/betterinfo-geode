@@ -80,13 +80,20 @@ void ExtendedLevelInfo::refreshInfoTexts() {
     m_primaryValues.clear();
     m_secondaryValues.clear();
 
+    auto [uploadDate, updateDate] = BetterInfo::getLevelDates(m_level);
+
     //first page
-    auto uploadDateStd = !m_level->m_uploadDate.empty() ? std::string(m_level->m_uploadDate) : LevelMetadata::addPlus(cache->getLevelDates(m_level->m_levelID).m_uploadDate);
-    auto updateDateStd = std::string(m_level->m_updateDate);
-    if(m_level->m_updateDate.empty()) {
-        updateDateStd = cache->getLevelDates(m_level->m_levelID).m_updateDate;
-        if(uploadDateStd != updateDateStd) updateDateStd = LevelMetadata::addPlus(updateDateStd);
-    }
+    auto uploadDateStd = !m_level->m_uploadDate.empty() 
+        ? std::string(m_level->m_uploadDate) 
+        : uploadDate != 0 
+            ? TimeUtils::timestampToHumanReadable(uploadDate) 
+            : LevelMetadata::addPlus(cache->getLevelDates(m_level->m_levelID).m_uploadDate);
+
+    auto updateDateStd = !m_level->m_updateDate.empty() 
+        ? std::string(m_level->m_updateDate) 
+        : updateDate != 0 
+            ? TimeUtils::timestampToHumanReadable(updateDate) 
+            : LevelMetadata::addPlus(cache->getLevelDates(m_level->m_levelID).m_updateDate);
     
     int levelPassword = m_level->m_password;
 
@@ -111,10 +118,9 @@ void ExtendedLevelInfo::refreshInfoTexts() {
     //second page
     size_t offset = 0;
 
-    auto [uploadDate, updateDate] = BetterInfo::getLevelDates(m_level);
-
     infoText.str("");
     if(uploadDate != 0) {
+        m_uploadDateEstimated = uploadDate;
         m_secondaryValues.push_back(TimeUtils::timeToString(uploadDate, true));
         infoText << "\n<cj>Uploaded</c>: " << m_secondaryValues[offset++];
     } else if(!ServerUtils::isGDPS()) {
@@ -146,15 +152,17 @@ void ExtendedLevelInfo::refreshInfoTexts() {
 }
 
 void ExtendedLevelInfo::setupAdditionalInfo() {
-    this->retain();
-    BetterInfoCache::sharedState()->fetchLevelDate(m_level->m_levelID, [this](time_t date) {
-        if(m_level->m_uploadDate.empty()) m_level->m_uploadDate = TimeUtils::timestampToHumanReadable(date);
-
-        m_uploadDateEstimated = date;
-        refreshInfoTexts();
-        loadPage(m_page);
-        this->release();
-    });
+    if(!m_uploadDateEstimated) {
+        this->retain();
+        BetterInfoCache::sharedState()->fetchLevelDate(m_level->m_levelID, [this](time_t date) {
+            if(m_level->m_uploadDate.empty()) m_level->m_uploadDate = TimeUtils::timestampToHumanReadable(date);
+    
+            m_uploadDateEstimated = date;
+            refreshInfoTexts();
+            loadPage(m_page);
+            this->release();
+        });
+    }
     
     this->retain();
     m_extraInfoHolder.spawn(
