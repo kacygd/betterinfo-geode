@@ -28,12 +28,16 @@ struct matjson::Serialize<BetterInfoCache::CachedLevelDate> {
     static geode::Result<BetterInfoCache::CachedLevelDate> fromJson(const matjson::Value& value) {
         GEODE_UNWRAP_INTO(std::string uploadDate, value["uploadDate"].asString());
         GEODE_UNWRAP_INTO(std::string updateDate, value["updateDate"].asString());
-        return Ok(BetterInfoCache::CachedLevelDate{uploadDate, updateDate});
+        GEODE_UNWRAP_INTO(time_t uploadDateExact, value["uploadDateExact"].asInt());
+        GEODE_UNWRAP_INTO(time_t updateDateExact, value["updateDateExact"].asInt());
+        return Ok(BetterInfoCache::CachedLevelDate{uploadDate, updateDate, uploadDateExact, updateDateExact});
     }
     static matjson::Value toJson(const BetterInfoCache::CachedLevelDate& levelDate) {
         return matjson::makeObject({
             {"uploadDate", levelDate.m_uploadDate},
-            {"updateDate", levelDate.m_updateDate}
+            {"updateDate", levelDate.m_updateDate},
+            {"uploadDateExact", levelDate.m_uploadDateExact},
+            {"updateDateExact", levelDate.m_updateDateExact}
         });
     }
 };
@@ -513,9 +517,13 @@ std::string BetterInfoCache::getVaultCode(const std::string& id) {
  * Level String Date Caching
  */
 void BetterInfoCache::cacheLevelDates(GJGameLevel* level) {
+    auto [uploadDate, updateDate] = BetterInfo::getLevelDates(level);
+
     m_levelDateStringCache[level->m_levelID] = {
         level->m_uploadDate,
-        level->m_updateDate
+        level->m_updateDate,
+        uploadDate,
+        updateDate
     };
 }
 
@@ -524,6 +532,6 @@ const BetterInfoCache::CachedLevelDate& BetterInfoCache::getLevelDates(int level
         return m_levelDateStringCache[levelID];
     }
 
-    static CachedLevelDate emptyDate = {"", ""};
+    static CachedLevelDate emptyDate = {"", "", 0, 0};
     return emptyDate;
 }

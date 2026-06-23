@@ -1017,5 +1017,12 @@ std::pair<time_t, time_t> BetterInfo::getLevelDates(GJGameLevel* level) {
     if(auto val = typeinfo_cast<CCInteger*>(level->getUserObject("key_63"_spr))) {
         updated = val->getValue();
     }
+
+    if (created == 0 && updated == 0) {
+        const auto& dates = BetterInfoCache::sharedState()->getLevelDates(level->m_levelID);
+        created = dates.m_uploadDateExact;
+        updated = dates.m_updateDateExact;
+    }
+
     return {created, updated};
 }

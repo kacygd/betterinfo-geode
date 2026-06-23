@@ -14,6 +14,8 @@ class BI_DLL BetterInfoCache {
 	struct CachedLevelDate {
 		std::string m_uploadDate;
 		std::string m_updateDate;
+		time_t m_uploadDateExact = 0;
+		time_t m_updateDateExact = 0;
 	};
 	friend struct matjson::Serialize<CachedLevelDate>;
 

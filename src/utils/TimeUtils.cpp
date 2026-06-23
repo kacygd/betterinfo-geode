@@ -15,13 +15,17 @@
 // since this is a dedicated utility file to time operations
 using namespace std::chrono;
 
-std::string TimeUtils::timeToString(time_t input) {
+std::string TimeUtils::timeToString(time_t input, bool useShortFormat) {
     struct tm timeInfo;
     #ifdef GEODE_IS_WINDOWS
         localtime_s(&timeInfo, &input);
     #else
         localtime_r(&input, &timeInfo);
     #endif
+
+    if(useShortFormat) {
+        return fmt::format("{:%F}", timeInfo);
+    }
 
     return fmt::format("{:%F %H:%M}", timeInfo);
 }

@@ -115,7 +115,7 @@ void ExtendedLevelInfo::refreshInfoTexts() {
 
     infoText.str("");
     if(uploadDate != 0) {
-        m_secondaryValues.push_back(TimeUtils::timeToString(uploadDate));
+        m_secondaryValues.push_back(TimeUtils::timeToString(uploadDate, true));
         infoText << "\n<cj>Uploaded</c>: " << m_secondaryValues[offset++];
     } else if(!ServerUtils::isGDPS()) {
         m_secondaryValues.push_back(TimeUtils::timeToIsoDate(m_uploadDateEstimated));
@@ -123,7 +123,7 @@ void ExtendedLevelInfo::refreshInfoTexts() {
     }
 
     if(updateDate != 0) {
-        m_secondaryValues.push_back(TimeUtils::timeToString(updateDate));
+        m_secondaryValues.push_back(TimeUtils::timeToString(updateDate, true));
         infoText << "\n<cj>Updated</c>: " << m_secondaryValues[offset++];
     }
 
