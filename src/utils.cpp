@@ -1008,3 +1008,14 @@ void BetterInfo::clearSavedValueGroup(std::string_view group) {
         container.erase(key);
     }
 }
+
+std::pair<time_t, time_t> BetterInfo::getLevelDates(GJGameLevel* level) {
+    time_t created = 0, updated = 0;
+    if(auto val = typeinfo_cast<CCInteger*>(level->getUserObject("key_62"_spr))) {
+        created = val->getValue();
+    }
+    if(auto val = typeinfo_cast<CCInteger*>(level->getUserObject("key_63"_spr))) {
+        updated = val->getValue();
+    }
+    return {created, updated};
+}

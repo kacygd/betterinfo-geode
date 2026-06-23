@@ -111,10 +111,20 @@ void ExtendedLevelInfo::refreshInfoTexts() {
     //second page
     size_t offset = 0;
 
+    auto [uploadDate, updateDate] = BetterInfo::getLevelDates(m_level);
+
     infoText.str("");
-    if(!ServerUtils::isGDPS()) {
+    if(uploadDate != 0) {
+        m_secondaryValues.push_back(TimeUtils::timeToString(uploadDate));
+        infoText << "\n<cj>Uploaded</c>: " << m_secondaryValues[offset++];
+    } else if(!ServerUtils::isGDPS()) {
         m_secondaryValues.push_back(TimeUtils::timeToIsoDate(m_uploadDateEstimated));
         infoText << "\n<cj>Uploaded</c>: " << m_secondaryValues[offset++];
+    }
+
+    if(updateDate != 0) {
+        m_secondaryValues.push_back(TimeUtils::timeToString(updateDate));
+        infoText << "\n<cj>Updated</c>: " << m_secondaryValues[offset++];
     }
 
     m_secondaryValues.push_back(LevelMetadata::zeroIfNA(m_level->m_objectCount));
@@ -249,10 +259,11 @@ bool ExtendedLevelInfo::init(GJGameLevel* level){
     refreshInfoTexts();
     setupAdditionalInfo();
 
-    m_info = TextArea::create(m_primary, "chatFont.fnt", 1, 170, {0,1}, 20, false);
+    m_info = TextArea::create(m_primary, "chatFont.fnt", 1, 185, {0,1}, 20, false);
     m_info->setPosition({-160.5,26});
     m_info->setAnchorPoint({0,1});
-    m_info->setScale(0.925f);
+    //m_info->setScale(0.925f);
+    m_info->setScale(0.85f);
     m_info->setID("info-text"_spr);
     m_buttonMenu->addChild(m_info);
 
@@ -335,9 +346,9 @@ bool ExtendedLevelInfo::init(GJGameLevel* level){
     copyMenu->setZOrder(11);
     m_mainLayer->addChild(copyMenu);
 
-    for(size_t i = 0; i < 7; i++) {
+    for(size_t i = 0; i < 8; i++) {
         auto btn = CCMenuItemSpriteExtra::create(
-            ButtonSprite::create("h", 170, true, "bigFont.fnt", "GJ_button_01.png", 20, 1),
+            ButtonSprite::create("h", 170, true, "bigFont.fnt", "GJ_button_01.png", 18.7, 1),
             this,
             menu_selector(ExtendedLevelInfo::onCopyInfo)
         );
